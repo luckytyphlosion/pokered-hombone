@@ -3722,20 +3722,11 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	inc de
 	ld a, [hli]       ; catch rate (held item in gen 2)
 	ld [de], a
-	ld hl, wMonHMoves
-	ld a, [hli]
 	inc de
 	push de
-	ld [de], a
-	ld a, [hli]
-	inc de
-	ld [de], a
-	ld a, [hli]
-	inc de
-	ld [de], a
-	ld a, [hli]
-	inc de
-	ld [de], a
+	ld a, [wMonDataLocation]
+	ld [wWritingMovesToPlayerMon], a
+	predef WriteMovesFromHeader
 	push de
 	dec de
 	dec de

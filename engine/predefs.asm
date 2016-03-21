@@ -140,7 +140,7 @@ PredefPointers:: ; 4fe79 (13:7e79)
 	add_predef HallOfFamePC
 	add_predef DisplayDexRating
 	dbw $1E, _LeaveMapAnim ; wrong bank
-	dbw $1E, EnterMapAnim ; wrong bank
+	add_predef WriteMovesFromHeader
 	add_predef GetTileTwoStepsInFrontOfPlayer
 	add_predef CheckForCollisionWhenPushingBoulder
 	add_predef PrintStrengthTxt

@@ -1,10 +1,14 @@
 DisplayEffectiveness: ; 2fb7b (b:7b7b)
 	ld a, [wDamageMultipliers]
 	and a, $7F
-	cp a, $0A
+	cp 10
 	ret z
+	bit 6, a
+	jr nz, .notVeryEffective
+	cp 10
 	ld hl, SuperEffectiveText
 	jr nc, .done
+.notVeryEffective
 	ld hl, NotVeryEffectiveText
 .done
 	jp PrintText

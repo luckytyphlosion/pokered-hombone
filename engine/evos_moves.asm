@@ -344,10 +344,10 @@ LearnMoveFromLevelUp: ; 3af5b (e:6f5b)
 	cp b ; is the move learnt at the mon's current level?
 	ld a, [hli] ; move ID
 	jr nz, .learnSetLoop
+	ld d, a ; ID of move to learn
 	dec hl
 	call CheckForAllowedMoves
 	jr c, .done
-	ld d, a ; ID of move to learn
 	ld a, [wMonDataLocation]
 	and a
 	jr nz, .next
@@ -517,6 +517,56 @@ WriteMonMoves_ShiftMoveData: ; 3b04e (e:704e)
 	jr nz, .loop
 	ret
 
+WriteMovesFromHeader:
+	call GetPredefRegisters
+	push hl
+	push bc
+	ld hl, wMonHMoves
+	ld a, [wWritingMovesToPlayerMon]
+	and $f
+	jr nz, .allowAllMoves
+	lb bc, NUM_MOVES, NUM_MOVES
+.loop
+	call CheckForAllowedMoves
+	jr c, .doNotWrite
+	ld a, [hl]
+	ld [de], a
+	dec b ; use b as number of increments
+	inc de
+.doNotWrite
+	inc hl
+	dec c
+	jr nz, .loop
+	ld a, b
+	cp NUM_MOVES
+	jr nz, .movesWereWritten
+	ld a, SPLASH
+	ld [de], a
+	ld a, b
+.movesWereWritten
+	dec de
+	add e
+	ld e, a
+	jr nc, .done
+	inc d
+	jr .done
+.allowAllMoves
+	ld a, [hli]
+	ld [de], a
+	inc de
+	ld a, [hli]
+	ld [de], a
+	inc de
+	ld a, [hli]
+	ld [de], a
+	inc de
+	ld a, [hli]
+	ld [de], a
+.done
+	pop bc
+	pop hl
+	ret
+	
 CheckForAllowedTMMove:
 	ld hl, wMoveNum
 	
@@ -525,6 +575,9 @@ CheckForAllowedMoves:
 	push de
 	push bc
 	ld a, [hl] ; move learned
+	and a
+	jr z, .bannedMove
+	dec a
 	ld hl, Moves + 1 ; move effect
 	ld bc, MoveEnd - Moves
 	call AddNTimes

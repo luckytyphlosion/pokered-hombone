@@ -3546,41 +3546,14 @@ PrintLetterDelay:: ; 38d3 (0:38d3)
 	bit 1,a
 	ret z
 	push hl
-	push de
 	push bc
-	ld a,[wLetterPrintingDelayFlags]
-	bit 0,a
-	jr z,.waitOneFrame
-	ld a,[wOptions]
-	and $f
-	ld [H_FRAMECOUNTER],a
-	jr .checkButtons
-.waitOneFrame
-	ld a,1
-	ld [H_FRAMECOUNTER],a
-.checkButtons
+	push de
 	call Joypad
-	ld a,[hJoyHeld]
-.checkAButton
-	bit 0,a ; is the A button pressed?
-	jr z,.checkBButton
-	jr .endWait
-.checkBButton
-	bit 1,a ; is the B button pressed?
-	jr z,.buttonsNotPressed
-.endWait
-	call DelayFrame
-	jr .done
-.buttonsNotPressed ; if neither A nor B is pressed
-	ld a,[H_FRAMECOUNTER]
-	and a
-	jr nz,.checkButtons
-.done
-	pop bc
 	pop de
+	pop bc
 	pop hl
 	ret
-
+	
 ; Copies [hl, bc) to [de, bc - hl).
 ; In other words, the source data is from hl up to but not including bc,
 ; and the destination is de.

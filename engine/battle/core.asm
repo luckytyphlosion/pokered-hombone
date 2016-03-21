@@ -3934,6 +3934,7 @@ PrintMoveFailureText: ; 3dbe2 (f:5be2)
 	ld hl, DoesntAffectMonText
 	ld a, [wDamageMultipliers]
 	and $7f
+	cp 100
 	jr z, .gotTextToPrint
 	ld hl, AttackMissedText
 	ld a, [wCriticalHitOrOHKO]
@@ -5299,11 +5300,6 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	ld c,[hl] ; c = type 2 of attacker
 	ld a,[wPlayerMoveType]
 	ld [wMoveType],a
-	
-	ld a, [wIsInBattle]
-	dec a
-	lb de, ROCK, GROUND
-	jr nz, .next
 
 	ld hl,wEnemyMonType
 	ld a,[hli]
@@ -5380,13 +5376,25 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	ld hl,wDamageMultipliers
 	set 7,[hl]
 .skipSameTypeAttackBonus
+	call ApplyEffectivenessModifiers
+	ld a, [H_WHOSETURN]
+	and a
+	ret nz
+	ld a, [wIsInBattle]
+	dec a
+	ret z
+	
+	lb de, ROCK, GROUND
+; fallthrough
+	
+ApplyEffectivenessModifiers:
 	ld a,[wMoveType]
 	ld b,a
 	ld hl,TypeEffects
 .loop
 	ld a,[hli] ; a = "attacking type" of the current type pair
 	cp a,$ff
-	jr z,.done
+	jr z, .done
 	cp b ; does move type match "attacking type"?
 	jr nz,.nextTypePair
 	ld a,[hl] ; a = "defending type" of the current type pair
@@ -5400,13 +5408,35 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	push hl
 	push bc
 	inc hl
-	ld a,[wDamageMultipliers]
-	and a,$80
-	ld b,a
-	ld a,[hl] ; a = damage multiplier
+	ld a, [hl] ; a = damage multiplier
 	ld [H_MULTIPLIER],a
+	ld a, [wDamageMultipliers]
+	and $7f
+	ld b, a
+	cp 100 ; NVE cannot reach this value
+	jr z, .skipDamageMultiplers
+	ld a, [hl]
+	and a ; immunity?
+	jr nz, .notImmunity
+	ld a, b
+	and $80
+	ld b, 100
+	jr .writeMultiplier
+.notImmunity
+	cp 20
+	jr nz, .notSuperEffective
+	ld a, 15
+.notSuperEffective
+	sub 10 ; get the additional value, negative or positive
 	add b
+	and $7f
+	ld b, a
+	ld a, [wDamageMultipliers]
+	and $80
+.writeMultiplier
+	or b
 	ld [wDamageMultipliers],a
+.skipDamageMultiplers
 	xor a
 	ld [H_MULTIPLICAND],a
 	ld hl,wDamage
@@ -5429,7 +5459,11 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 .typeImmunity
 ; if damage is 0, make the move miss
 ; this only occurs if a move that would do 2 or 3 damage is 0.25x effective against the target
-	inc a
+	ld a, [wDamageMultipliers]
+	and $7f
+	cp 100
+	jr nz, .skipTypeImmunity
+	ld a, $1
 	ld [wMoveMissed],a
 .skipTypeImmunity
 	pop bc
@@ -5439,8 +5473,13 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	inc hl
 	jp .loop
 .done
+	ld hl, wDamage
+	ld a, [hli]
+	or [hl]
+	ret nz
+	inc [hl]
 	ret
-
+	
 ; function to tell how effective the type of an enemy attack is on the player's current pokemon
 ; this doesn't take into account the effects that dual types can have
 ; (e.g. 4x weakness / resistance, weaknesses and resistances canceling)
@@ -6343,18 +6382,7 @@ LoadEnemyMonData_continue:
 	jr .loadMovePPs
 .copyStandardMoves
 ; for a wild mon, first copy default moves from the mon header
-	ld hl, wMonHMoves
-	ld a, [hli]
-	ld [de], a
-	inc de
-	ld a, [hli]
-	ld [de], a
-	inc de
-	ld a, [hli]
-	ld [de], a
-	inc de
-	ld a, [hl]
-	ld [de], a
+	predef WriteMovesFromHeader
 	dec de
 	dec de
 	dec de

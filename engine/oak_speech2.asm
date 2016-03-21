@@ -197,9 +197,9 @@ DefaultNamesPlayer: ; 6aa8 (1:6aa8)
 
 DefaultNamesRival: ; 6abe (1:6abe)
 	db   "NEW NAME"
-	next "BLUE"
-	next "GARY"
-	next "JOHN"
+	next "HOMBONE"
+	next "HOMBONE"
+	next "HOMBONE"
 	db   "@"
 ENDC
 
@@ -213,9 +213,9 @@ DefaultNamesPlayer: ; 6aa8 (1:6aa8)
 
 DefaultNamesRival: ; 6abe (1:6abe)
 	db   "NEW NAME"
-	next "RED"
-	next "ASH"
-	next "JACK"
+	next "HOMBONE"
+	next "HOMBONE"
+	next "HOMBONE"
 	db   "@"
 ENDC
 
@@ -263,13 +263,13 @@ IF DEF(_RED)
 DefaultNamesPlayerList: ; 6af2 (1:6af2)
 	db "NEW NAME@RED@ASH@JACK@"
 DefaultNamesRivalList: ; 6b08 (1:6b08)
-	db "NEW NAME@BLUE@GARY@JOHN@"
+	db "NEW NAME@HOMBONE@HOMBONE@HOMBONE@"
 ENDC
 IF DEF(_BLUE)
 DefaultNamesPlayerList: ; 6af2 (1:6af2)
 	db "NEW NAME@BLUE@GARY@JOHN@"
 DefaultNamesRivalList: ; 6b08 (1:6b08)
-	db "NEW NAME@RED@ASH@JACK@"
+	db "NEW NAME@HOMBONE@HOMBONE@HOMBONE@"
 ENDC
 IF DEF(_YELLOW)
 DefaultNamesPlayerList:
