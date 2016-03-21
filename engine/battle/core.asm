@@ -1512,6 +1512,8 @@ EnemySendOutFirstMon: ; 3c92a (f:492a)
 	ld [wd0b5],a
 	call GetMonHeader
 	ld de,vFrontPic
+	ld a, $1
+	ld [wUseHomboneSprite], a
 	call LoadMonFrontSprite
 	ld a,-$31
 	ld [hStartTileID],a
@@ -2468,6 +2470,8 @@ PartyMenuOrRockOrRun:
 	ld [wd0b5], a
 	call GetMonHeader
 	ld de, vFrontPic
+	ld a, $1
+	ld [wUseHomboneSprite], a
 	call LoadMonFrontSprite
 	jr .enemyMonPicReloaded
 .doEnemyMonAnimation
@@ -5286,20 +5290,28 @@ IncrementMovePP: ; 3e373 (f:6373)
 ; function to adjust the base damage of an attack to account for type effectiveness
 AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 ; values for player turn
+	ld a,[H_WHOSETURN]
+	and a
+	jr nz,.enemy
 	ld hl,wBattleMonType
 	ld a,[hli]
 	ld b,a    ; b = type 1 of attacker
 	ld c,[hl] ; c = type 2 of attacker
+	ld a,[wPlayerMoveType]
+	ld [wMoveType],a
+	
+	ld a, [wIsInBattle]
+	dec a
+	lb de, ROCK, GROUND
+	jr nz, .next
+
 	ld hl,wEnemyMonType
 	ld a,[hli]
 	ld d,a    ; d = type 1 of defender
 	ld e,[hl] ; e = type 2 of defender
-	ld a,[wPlayerMoveType]
-	ld [wMoveType],a
-	ld a,[H_WHOSETURN]
-	and a
-	jr z,.next
+	jr .next
 ; values for enemy turn
+.enemy
 	ld hl,wEnemyMonType
 	ld a,[hli]
 	ld b,a    ; b = type 1 of attacker
@@ -5315,20 +5327,52 @@ AdjustDamageForMoveType: ; 3e3a5 (f:63a5)
 	cp b ; does the move type match type 1 of the attacker?
 	jr z,.sameTypeAttackBonus
 	cp c ; does the move type match type 2 of the attacker?
-	jr z,.sameTypeAttackBonus
-	jr .skipSameTypeAttackBonus
+	jr nz, .skipSameTypeAttackBonus
 .sameTypeAttackBonus
 ; if the move type matches one of the attacker's types
-	ld hl,wDamage + 1
-	ld a,[hld]
-	ld h,[hl]
-	ld l,a    ; hl = damage
+	ld hl, wDamage
+	ld a, [hli]
+	ld l, [hl]
+	ld h, a ; hl = damage
+	
+	ld a, [wIsInBattle]
+	dec a
+	jr z, .wildBattleOrPlayerOrNonEnemyRockGround
+	ld a, [H_WHOSETURN]
+	and a ; enemy?
+	jr z, .wildBattleOrPlayerOrNonEnemyRockGround
+	
+	push de
+	ld e, $0
+	ld a, b ; check for types
+	cp ROCK
+	jr nz, .checkForGround
+	inc e
+.checkForGround
+	ld a, c
+	cp GROUND
+	jr nz, .tryModifiedSTAB
+	inc e
+.tryModifiedSTAB
+	ld a, e
+	and a
+	pop de
+	jr z, .wildBattleOrPlayerOrNonEnemyRockGround
+	ld b, h
+	ld c, l
+.multiplyDamageLoop
+	add hl, bc
+	dec a
+	jr nz, .multiplyDamageLoop
+	jr .storeDamage
+.wildBattleOrPlayerOrNonEnemyRockGround
 	ld b,h
 	ld c,l    ; bc = damage
 	srl b
 	rr c      ; bc = floor(0.5 * damage)
 	add hl,bc ; hl = floor(1.5 * damage)
 ; store damage
+.storeDamage
 	ld a,h
 	ld [wDamage],a
 	ld a,l
@@ -6199,7 +6243,14 @@ GetCurrentMove: ; 3eabe (f:6abe)
 	ld de, wcd6d
 	jp CopyStringToCF4B
 
+LoadEnemyMonData_WildMon:
+	ld a, $f
+	jr LoadEnemyMonData_continue
+	
 LoadEnemyMonData: ; 3eb01 (f:6b01)
+	xor a
+LoadEnemyMonData_continue:
+	ld [wWritingMovesToPlayerMon], a
 	ld a, [wLinkState]
 	cp LINK_STATE_BATTLING
 	jp z, LoadEnemyMonFromParty
@@ -6892,7 +6943,7 @@ InitBattleCommon: ; 3ef3d (f:6f3d)
 InitWildBattle: ; 3ef8b (f:6f8b)
 	ld a, $1
 	ld [wIsInBattle], a
-	call LoadEnemyMonData
+	call LoadEnemyMonData_WildMon
 	call DoBattleTransitionAndInitBattleVariables
 	ld a, [wCurOpponent]
 	cp MAROWAK

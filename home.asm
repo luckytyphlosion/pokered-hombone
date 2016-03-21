@@ -718,6 +718,20 @@ PrintBCDDigit:: ; 1604 (0:1604)
 ; assumes the corresponding mon header is already loaded
 ; hl contains offset to sprite pointer ($b for front or $d for back)
 UncompressMonSprite:: ; 1627 (0:1627)
+	ld a, [wUseHomboneSprite]
+	and a
+	ld a, $0
+	ld [wUseHomboneSprite], a
+	jr z, .notHomboneSprite
+	ld a, HombonePicFront & $ff
+	ld [wSpriteInputPtr], a
+	ld a, HombonePicFront / $100
+	ld [wSpriteInputPtr + 1], a
+	ld a, $77
+	ld [wMonHSpriteDim], a
+	ld a, BANK(HombonePicFront)
+	jr .GotBank
+.notHomboneSprite
 	ld bc,wMonHeader
 	add hl,bc
 	ld a,[hli]

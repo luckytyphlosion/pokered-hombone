@@ -3742,6 +3742,8 @@ _AddPartyMon: ; f2e5 (3:72e5)
 	dec de
 	xor a
 	ld [wLearningMovesFromDayCare], a
+	ld a, [wMonDataLocation]
+	ld [wWritingMovesToPlayerMon], a
 	predef WriteMonMoves
 	pop de
 	ld a, [wPlayerID]  ; set trainer ID to player ID
@@ -5537,6 +5539,8 @@ INCLUDE "engine/menu/pokedex.asm"
 INCLUDE "engine/trade.asm"
 INCLUDE "engine/intro.asm"
 INCLUDE "engine/trade2.asm"
+
+HombonePicFront:: INCBIN "pic/bmon/hombone.pic"
 
 
 SECTION "bank11",ROMX,BANK[$11]

@@ -3,9 +3,13 @@ CanLearnTM: ; 1373e (4:773e)
 	ld a, [wcf91]
 	ld [wd0b5], a
 	call GetMonHeader
-	ld hl, wMonHLearnset
-	push hl
+	
+	callab CheckForAllowedTMMove
+	ld c, $0
+	ret c
+	
 	ld a, [wMoveNum]
+	ld hl, wMonHLearnset
 	ld b, a
 	ld c, $0
 	ld hl, TechnicalMachines

@@ -10,7 +10,7 @@ SafariZoneSecretHouseText1: ; 4a31c (12:631c)
 	jr nz, .asm_20a9b
 	ld hl, SafariZoneSecretHouseText_4a350
 	call PrintText
-	lb bc, HM_03, 1
+	lb bc, SURFBOARD, 1
 	call GiveItem
 	jr nc, .BagFull
 	ld hl, ReceivedHM03Text

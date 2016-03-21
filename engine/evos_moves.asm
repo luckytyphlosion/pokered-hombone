@@ -433,6 +433,13 @@ WriteMonMoves: ; 3afb8 (e:6fb8)
 ; try to find an empty move slot
 	pop de
 	push de
+	ld a, [wWritingMovesToPlayerMon]
+	and $f ; are we adding to the enemy party?
+	ld a, $0
+	ld [wWritingMovesToPlayerMon], a
+	call z, CheckForAllowedMoves
+	jr c, .nextMove ; if we can't learn this move, loop
+	
 	ld c, NUM_MOVES
 .findEmptySlotLoop
 	ld a, [de]
@@ -488,7 +495,7 @@ WriteMonMoves: ; 3afb8 (e:6fb8)
 	pop hl
 	ld [hl], a
 	pop hl
-	jr .nextMove
+	jp .nextMove
 
 .done
 	pop bc
@@ -505,6 +512,49 @@ WriteMonMoves_ShiftMoveData: ; 3b04e (e:704e)
 	ld [hli], a
 	dec c
 	jr nz, .loop
+	ret
+
+CheckForAllowedTMMove:
+	ld hl, wMoveNum
+	
+CheckForAllowedMoves:
+	push hl
+	push de
+	push bc
+	ld a, [hl] ; move learned
+	ld hl, Moves + 1 ; move effect
+	ld bc, MoveEnd - Moves
+	call AddNTimes
+	ld a, [hli]
+	cp OHKO_EFFECT
+	jr z, .bannedMove
+	cp SPECIAL_DAMAGE_EFFECT
+	jr z, .allowedMove
+	ld a, [hli]
+	and a ; does the move do damage?
+	jr z, .allowedMove
+	ld a, [hl]
+	cp WATER
+	jr z, .bannedMove
+	cp GRASS
+	jr z, .bannedMove
+	cp ICE
+	jr z, .bannedMove
+	cp FIGHTING
+	jr z, .bannedMove
+	cp GROUND
+	jr z, .bannedMove
+.allowedMove
+	pop bc
+	pop de
+	pop hl
+	and a
+	ret
+.bannedMove
+	pop bc
+	pop de
+	pop hl
+	scf
 	ret
 
 Evolution_FlagAction: ; 3b057 (e:7057)

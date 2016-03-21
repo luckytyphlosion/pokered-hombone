@@ -1560,10 +1560,13 @@ wBattleMon:: battle_struct wBattleMon ; d014
 wTrainerClass:: ; d031
 	ds 1
 
+wUseHomboneSprite::
 	ds 1
 
 wTrainerPicPointer:: ; d033
 	ds 2
+	
+wWritingMovesToPlayerMon::
 	ds 1
 
 wTempMoveNameBuffer:: ; d036
