@@ -344,6 +344,9 @@ LearnMoveFromLevelUp: ; 3af5b (e:6f5b)
 	cp b ; is the move learnt at the mon's current level?
 	ld a, [hli] ; move ID
 	jr nz, .learnSetLoop
+	dec hl
+	call CheckForAllowedMoves
+	jr c, .done
 	ld d, a ; ID of move to learn
 	ld a, [wMonDataLocation]
 	and a
